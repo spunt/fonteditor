@@ -1,12 +1,43 @@
 function fige = fonteditor(figh)    
 if nargin==0, figh = gcf; end
-fgcolor        = [248/255 248/255 248/255];
-bgcolor        = [20/255 23/255 24/255] * 2;
+fgcolor = [248/255 248/255 248/255];
+bgcolor = [20/255 23/255 24/255] * 2;
+set(findall(figh, '-property', 'FontUnits'), 'FontUnits', 'points');
+h       = findall(figh, 'Type', 'Text', '-property', 'String', '-property', 'visible');
+hl      = findall(figh, 'Type', 'Legend', '-property', 'String', '-property', 'visible');
+hstr        = get(h, 'String');
+empty       = find(cellfun('isempty', hstr));
+h(empty)    = []; 
+hstr(empty) = [];
+if ~isempty(hl)
+    if length(hl)==1
+        lstr = get(hl, 'String')';
+        hl = repmat(hl, length(lstr), 1); 
+    else
+        for i = 1:length(hl)
+            tmpstr = get(hl(i), 'string'); 
+            tmphl = repmat(hl(i), length(tmpstr), 1);
+        end
+        lstr = get(hl, 'String');
+        ln = cellfun('length', lstr);
+        lstr = horzcat(lstr{:})';
+        tmphl = hl;
+        hl = []; 
+        for i = 1:length(tmphl)
+           hl = [hl; repmat(tmphl(i), ln(i), 1)];
+        end
+    end
+    h = [h; hl];
+    hstr = [hstr; lstr];
+end
 
-
-h   = findall(figh, '-property', 'FontSize', '-property', 'visible');
-nh  = length(h);
-set(h, 'FontUnits', 'points');
+[ustr, idxa, idxb] = unique(hstr);
+hedit = cell(length(ustr),2); 
+for i = 1:length(ustr)
+    hedit(i,1) = ustr(i); 
+    hedit{i,2} = h(idxb==i); 
+end
+nh  = length(hedit);
 fige  =  figure( ...
     'Name'                     ,        'Font Editor'      ,...
     'Units'                    ,        'pix'              ,...
@@ -30,7 +61,10 @@ fige  =  figure( ...
     'DefaultTextFontSize'      ,        12                  ,...
     'DefaultUicontrolFontSize' ,        12                   ...
                         );
-panpos = getpositions(1, ones(nh+1,1)', .025, .015);
+panpos = getpositions(1, ones(nh+2,1)', .025, .015);
+
+
+
 hpantit = uipanel('Units'    ,     'normalized'                           ,...
                   'Parent'   ,     fige                            ,...
                      'Tag'   ,     'Header Row'                        ,...
@@ -104,21 +138,24 @@ hpantit = uipanel('Units'    ,     'normalized'                           ,...
                     
 panpos(end,:) = [];
 panpos = sortrows(panpos, -4);
-for i = 1:nh
+for i = 1:(nh+1)
 
-
-    ch = h(i);
-    typ = get(ch, 'type');
-    fs = sprintf('%2.1f', get(ch, 'FontSize')); 
-    switch typ
-        case {'axes' 'uipanel'}
-            str = 'TICK LABELS'; 
-            enb = 'off'; 
-        otherwise
-            str = get(ch, 'string');
-            enb = 'on';
-    end
     
+    if i<(nh+1)
+        ch = hedit{i,2};
+        fsraw = get(ch, 'fontsize');
+        str = get(ch(1), 'str');
+        if iscell(fsraw), fsraw = fsraw{1}; end
+        fs = sprintf('%2.1f', fsraw);
+        enb = 'on'; 
+    else
+        ch = findall(figh, 'type', 'axes');
+        fsraw = get(ch, 'Fontsize');
+        str = 'AXES';
+        if iscell(fsraw), fsraw = fsraw{1}; end
+        fs = sprintf('%2.1f', fsraw);
+        enb = 'off'; 
+    end
     
     hpan(i)  =  uipanel( ...
                    'Units'   ,     'normalized'                           ,...
@@ -143,7 +180,7 @@ for i = 1:nh
                  'Visible'   ,     'on'                                    ...
                             );
 
-    hedit(i)  =  uicontrol( ...
+    hed(i)  =  uicontrol( ...
                    'Style'   ,     'edit'                                 ,...
                   'Parent'   ,     hpan(i)                            ,...
                      'Tag'   ,     'String'                        ,...
