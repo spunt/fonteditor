@@ -68,9 +68,6 @@ fige  =  figure( ...
     'DefaultUicontrolFontSize' ,        12                   ...
                         );
 panpos = getpositions(1, ones(nh+2,1)', .025, .015);
-
-
-
 hpantit = uipanel('Units'    ,     'normalized'                           ,...
                   'Parent'   ,     fige                            ,...
                      'Tag'   ,     'Header Row'                        ,...
@@ -255,7 +252,6 @@ catch
     warning('Could not update string! Reverting to original string'); 
     set(varargin{1}, 'string', get(varargin{3}, 'string'));
 end
-
 end
 function pos = getpositions(relwidth, relheight, marginsep, uicontrolsep)
 if nargin<2, relheight = [6 7]; end
